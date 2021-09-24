@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <title>India Map</title>
+    <script type="text/javascript" src="d3.min.js"></script>
+    <script type="text/javascript" src="d3-geo.min.js"></script>
+    <style type="text/css">
+        path {
+            fill: #ccc;
+            stroke: #fff;
+            stroke-width: .2px;
+        }
+
+        path:hover {
+            fill: orange;
+        }
+
+        body {
+            text-align: center;
+        }
+
+        div.tooltip {
+            position: absolute;
+            text-align: center;
+            width: 80px;
+            height: 14px;
+            padding: 2px;
+            font: 120px sans-serif;
+            background: #fff;
+            border: 0px;
+            pointer-events: none;
+        }
+
+        table {
+            color: #333;
+            font-family: Helvetica, Arial, sans-serif;
+            width: 640px;
+            /* Table reset stuff */
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        td,
+        th {
+            border: 0 none;
+            height: 30px;
+        }
+
+        th {
+            /* Gradient Background */
+            background: linear-gradient(#333 0%, #444 100%);
+            color: #FFF;
+            font-weight: bold;
+            height: 40px;
+        }
+
+        td {
+            background: #FAFAFA;
+            text-align: center;
+        }
+
+        /* Zebra Stripe Rows */
+
+        tr:nth-child(even) td {
+            background: #EEE;
+        }
+
+        tr:nth-child(odd) td {
+            background: #FDFDFD;
+        }
+
+
+        /* Add border-radius to specific cells! */
+        tr:last-child td:first-child {
+            border-radius: 0 0 0 5px;
+        }
+
+        tr:last-child td:last-child {
+            border-radius: 0 0 5px 0;
+        }
+
+        tr:first-child th:first-child {
+            border-radius: 5px 0 0 0;
+        }
+
+        tr:first-child th:last-child {
+            border-radius: 0 5px 0 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chart"></div>
+    <div><h3 id="list"></h3></div>
+    <script type="text/javascript">
+        var w = window.innerWidth*0.95;
+        var h = window.innerHeight * 0.95;
+        var proj = d3.geo.mercator();
+        var path = d3.geo.path().projection(proj);
+        var t = proj.translate(); // the projection's default translation
+        var s = proj.scale() // the projection's default scale
+
+        var map = d3.select("#chart").append("svg:svg")
+            .attr("width", w)
+            .attr("height", h)
+                //    .call(d3.behavior.zoom().on("zoom", redraw))
+            .call(initialize);
+
+        var india = map.append("svg:g")
+            .attr("id", "india");
+
+        var divv = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+        function rebase() {
+            d3.json("2011_Dist_1.json", function (json) {
+                india.selectAll("path")
+                    .data(json.features)
+                    .enter()
+                    .append("g")
+                    .attr("class", "container")
+                    .attr("id", function (d) { return d.properties.DISTRICT; })
+                    .append("path")
+                    .attr("d", path)
+                    .attr("class", "state")
+                    .attr("id", function (d) { return d.properties.DISTRICT; })
+                    .on("mouseover", function (d, i) {
+                        d3.select(this)
+                            .style("transform", "scale(1.02,1.02)")
+                            .style("transform-origin", "50% 50%").append("svg:title").text(d.properties.DISTRICT);
+                        d3.select("#list").text(d.properties.DISTRICT)
+                        
+                            console.log(d.properties.DISTRICT);
+                            console.log(i);
+                    })
+                    .on("mouseout", function (d, i) {
+                        d3.select(this)
+                            .style("transform", "scale(1,1)")
+                            .style("transform-origin", "50% 50%");
+                    })
+                    .on("click", function () {
+                        var nextColor = this.style.fill == "red" ? "#ccc" : "red";
+                        d3.select(this).style("fill", nextColor);
+                    });;
+            });
+            
+        };
+        rebase();
+
+        function refrsh() {
+
+            d3.selectAll(".state").style("fill", "#ccc").style("stroke", "#fff");
+            d3.selectAll("title").remove()
+            rebase();
+        }
+        setTimeout(refrsh, (200));
+
+        function initialize() {
+            proj.scale(6800);
+            proj.translate([-window.innerWidth*0.5, 780]);
+            console.log(window.innerWidth);
+            console.log(window.innerHeight);
+        };
+
+
+
+        
+           // This section should allow for zoom & pan.
+        
+           function redraw() {
+              // d3.event.translate stores the current translation from the parent SVG element
+              // t stores the projection's default translation
+              // adding the x and y vales in each array to yields the projection's new translation
+              var tx = t[0] * d3.event.scale + d3.event.translate[0];
+              var ty = t[1] * d3.event.scale + d3.event.translate[1];
+              proj.translate([tx, ty]);
+        
+              // determine the projection's new scale and redraw the map:
+              proj.scale(s * d3.event.scale);
+              india.selectAll("path").attr("d", path);
+            }
+        
+
+    </script>
+
+</body>
+
+</html>
