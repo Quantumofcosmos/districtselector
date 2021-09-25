@@ -95,18 +95,17 @@
     <div id="chart"></div>
     <div><h3 id="list"></h3></div>
     <script type="text/javascript">
-        var w = window.innerWidth*0.95;
-        var h = window.innerHeight * 0.95;
+        var w = window.innerWidth*0.88;
+        var h = window.innerHeight * 0.88;
         var proj = d3.geo.mercator();
-        var path = d3.geo.path().projection(proj);
-        var t = proj.translate(); // the projection's default translation
-        var s = proj.scale() // the projection's default scale
-
+        var path = d3.geo.path().projection(proj);  
         var map = d3.select("#chart").append("svg:svg")
             .attr("width", w)
             .attr("height", h)
-                //    .call(d3.behavior.zoom().on("zoom", redraw))
-            .call(initialize);
+        .call(d3.behavior.zoom().on("zoom", redraw))
+        .call(initialize);
+        var t = proj.translate(); // the projection's default translation
+        var s = proj.scale() // the projection's default scale
 
         var india = map.append("svg:g")
             .attr("id", "india");
@@ -116,7 +115,7 @@
                 .style("opacity", 0);
 
         function rebase() {
-            d3.json("2011_Dist.json", function (json) {
+            d3.json("2011_Dist_bbox.json", function (json) {
                 india.selectAll("path")
                     .data(json.features)
                     .enter()
@@ -129,22 +128,24 @@
                     .attr("id", function (d) { return d.properties.DISTRICT; })
                     .on("mouseover", function (d, i) {
                         d3.select(this)
-                            .style("transform", "scale(1.02,1.02)")
-                            .style("transform-origin", "50% 50%").append("svg:title").text(d.properties.DISTRICT);
+                            .append("svg:title").text(d.properties.DISTRICT);
                         d3.select("#list").text(d.properties.DISTRICT)
                         
-                            console.log(d.properties.DISTRICT);
-                            console.log(i);
                     })
                     .on("mouseout", function (d, i) {
                         d3.select(this)
                             .style("transform", "scale(1,1)")
                             .style("transform-origin", "50% 50%");
+                            d3.select("#list").text("")
                     })
                     .on("click", function () {
                         var nextColor = this.style.fill == "red" ? "#ccc" : "red";
                         d3.select(this).style("fill", nextColor);
-                    });;
+                    });
+                    // var bds = d3.geo.bounds(json.features);
+                    // console.log(bds);
+                    // projection.center([(b[1][0] + b[0][0]) / 2, (b[1][1] + b[0][1]) / 2]);
+                    // projection.translate([width / 2, height / 2]);
             });
             
         };
